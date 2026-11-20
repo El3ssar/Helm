@@ -1,38 +1,40 @@
-<!-- helm:begin (managed by /helm:init; edit the template, not this block) -->
-## Helm workflow
+<!-- helm:begin (managed by /helm:init) -->
+## Helm
 
-The human owns intent and high-level decisions. You own execution inside an approved milestone.
+The human owns intent and decisions; you execute approved milestones.
 
-### Sources of truth
-- `docs/INTENT.md`: purpose, non-goals, invariants. Human-owned; never edit unless told to.
-- `docs/adr/`: accepted decisions. Written only through `/helm:decide`. You draft ADRs inside the decision bead's `--design` field.
-- `docs/ARCHITECTURE.md`: how the system is built now. Keep it true in the same commit as the change.
-- `docs/milestones/`: one brief + QA report per milestone.
-- beads (`bd`): every unit of work. No TODO lists in markdown or code comments.
-- `.helm/state.json`: the active milestone (epic id, doc, branch).
+**Truth:**
+- `docs/INTENT.md` (human-owned);
+- `docs/adr/` (written only via `/helm:decide`);
+- `docs/ARCHITECTURE.md` (keep it true, same commit as the change);
+- `docs/milestones/`;
+- beads (`bd`): all work, no TODO lists elsewhere;
+- `.helm/state.json`: the active milestone.
 
-### Escalate, don't decide
-Create a decision bead and stop working on what it blocks when a task would:
-1. change anything matched by `.helm/public-paths` (stable surface);
-2. add a third-party dependency, service, or toolchain;
-3. contradict `docs/INTENT.md` or an accepted ADR, or depend on one of its open questions;
-4. find an acceptance criterion ambiguous, wrong, or infeasible;
-5. need work outside the milestone scope to finish.
+**Escalate, don't decide**, if a task would:
+- touch `.helm/public-paths`;
+- add a dependency;
+- contradict INTENT or an ADR;
+- meet an unclear or infeasible criterion;
+- need out-of-scope work.
 
-```
-bd create "Decide: <question>" -t decision -l human --parent <epic> -d "<body>"
-bd dep add <blocked-task> <decision-id>
-```
-Body: Question / Context / Options (with consequences) / Recommendation / Blocks. If the decision is architectural, put the full ADR draft (template: `docs/adr/TEMPLATE.md`) in `--design`.
-Everything else you decide yourself, and record it in the task's close reason.
+Escalate with `bd create "Decide: <q>" -t decision -l human --parent <epic> -d "<question, context, options, recommendation>" [--design "<ADR draft>"]`, then `bd dep add <task> <decision>`.
 
-### Execution rules
-- Work only on the active milestone: `bd ready --parent <epic> --exclude-label human`.
-- Test first, always: failing test, minimal code, refactor. Probity blocks code written without a failing test.
-- Run `.helm/check.sh fast` right before every commit. Never `--no-verify`.
-- Every commit is `<type>(<scope>): <summary>` with trailer `Bead: <id>`. A task may take several commits; each one must pass the gate.
-- Out-of-scope work you notice: `bd create "<title>" -l triage --deps discovered-from:<id>`; do not do it now.
-- Close with `bd close <id> -r "<what changed; how verified; local decisions taken>"`.
-- Never push, merge, tag, close milestone epics, answer human decisions, or edit INTENT, ADRs, gates, CI or settings. Helm's authority hook denies these outside a turn the human started with `/helm:decide`, and it does so in every permission mode. A denial means: escalate, don't find another route.
-- This block is the repository authority for the beads session protocol. You are authorised to commit; you are not authorised to push, pull or sync remotes.
+**Work rules:**
+- Test first.
+- `.helm/check.sh fast` before every commit.
+- Commit as `<type>(<scope>): <summary>` with a `Bead: <id>` trailer.
+- Out-of-scope finds: `bd create ... -l triage --deps discovered-from:<id>`.
+- Close with `bd close <id> -r "<change; tests; local decisions>"`.
+- You may commit; never push, pull or sync.
+- A `helm:` denial means escalate, never route around it.
+
+**Asking the human.** Every question states:
+1. what you found (quote it, with the file path);
+2. why it matters (what the answer will control);
+3. the question, in plain words;
+4. options with consequences, or one example answer;
+5. your recommendation.
+
+Open questions go in chat text. AskUserQuestion is only for discrete choices, and each one must make sense without the chat. One topic per question.
 <!-- helm:end -->

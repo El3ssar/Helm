@@ -1,60 +1,34 @@
 ---
 name: decide
-description: Walk the human through every pending decision — architectural choices, unblock requests, and milestone QA — and record their answers in beads, ADRs and the milestone doc.
+description: Walk the human through pending decisions and milestone QA; record the answers.
 disable-model-invocation: true
-argument-hint: "[decision bead id]"
+argument-hint: "[bead id]"
 ---
+The human's inbox. Only here may decisions be answered, milestones closed, ADRs/INTENT/gates/CI edited, and branches pushed, merged or tagged. The session may be in bypass mode, so act only on the human's answer in chat, never on the fact that a write succeeded. If you think an answer is unsound, say so once, then record it as given.
 
-# /helm:decide
+Items: $ARGUMENTS, or else `bd human list -s open` (oldest first, QA last).
 
-The human's inbox. Every item is a bead labeled `human`. Present each one so the human
-can answer it in under a minute. They may answer differently from your recommendation:
-record their answer faithfully, and if you think it's unsound, say so once, with the
-reason, before recording it.
+**Decision items.**
+1. `bd show <id>`. Ask following the "Asking the human" rule in CLAUDE.md; the evidence comes from the bead and the code.
+2. Record the answer with `bd human respond <id> -r "<answer>"`.
+3. If the bead's design field holds an ADR draft: write it to `docs/adr/NNNN-<slug>.md` (Accepted or Rejected, with the Decision filled in) and index it in ARCHITECTURE.
+4. Then, as needed: update `.helm/public-paths`; adjust the tasks (create them, or close as `superseded: <id>`, or re-link); propose INTENT edits and apply them only once confirmed.
+5. Commit `docs(adr): ...`.
 
-This is the only command in which helm's authority hook allows answering decisions, closing
-milestones, editing ADRs/INTENT/gates/CI, and pushing, merging or tagging. The session may be in
-bypass mode, so **never act before the human has answered in the conversation**. Writes going
-through prove nothing; the human's answer is the approval.
-
-Target: $ARGUMENTS (default: all open items, oldest first, QA last).
-
-## Ordinary decisions (`-t decision`, without the `qa` label)
-For each item from `bd human list -s open`:
-1. `bd show <id>`. Its design field holds the ADR draft, if one exists.
-2. Present the decision in four parts:
-   - the question;
-   - why it matters, in two lines;
-   - the options with their consequences;
-   - your recommendation and its reason.
-
-   Then ask with AskUserQuestion. Put your recommendation first, marked Recommended. The human can always type their own answer.
-3. Record the answer:
-   - `bd human respond <id> -r "<answer, in the human's words where given>"`.
-   - ADR (when the bead has a draft): write `docs/adr/NNNN-<slug>.md` from it, using the next free number. Set `Status: Accepted` (or `Rejected`, which is kept as a record) and fill **Decision** with the human's answer. Add a line to the Decisions index in ARCHITECTURE.md.
-   - If the answer changes the stable surface, update `.helm/public-paths`.
-   - If the answer changes scope: adjust the epic's tasks (create, close as `superseded: <decision id>`, or re-link deps) and tell the human what changed.
-   - If it resolves an INTENT open question: show the proposed INTENT edit and apply it only after the human confirms it.
-4. Commit the doc changes: `docs(adr): <decision>`.
-
-## Milestone QA (`qa` label)
-1. Open the milestone doc's QA report. Go through the acceptance criteria one at a time:
-   - show the evidence;
-   - for demo steps, give the exact command. The human runs it, or asks you to run it and show the output;
-   - ask: pass / fail / pass-with-note.
-2. Show "Decisions made without escalation" and ask whether any should be reverted.
-   Show **Protected files changed**, freshly computed with `node "${CLAUDE_PLUGIN_ROOT}/scripts/authority.mjs" protected-diff <main>`. Any file listed there must be explained by an accepted decision; if one isn't, treat it as a failed criterion.
-3. Then:
-   - **All pass, none reverted:**
-     1. `bd human respond <qa-id> -r "accepted"`.
-     2. Fill **Verdict** and set `Status: Accepted`. Commit.
-     3. `bd epic close-eligible`.
-     4. Merge to main: open a PR (`git push -u origin <branch>` and `gh pr create`) if the project uses GitHub, otherwise `git switch <main> && git merge --no-ff <branch>`.
-     5. `git tag mNN`.
-     6. Set `active_milestone` to null in `.helm/state.json` and commit.
-     7. Tell the human: `/helm:milestone` for the next one.
-   - **Any fail or revert:**
-     1. Create one task per failure under the epic. Its acceptance field is the human's stated expectation, quoted.
-     2. `bd human dismiss <qa-id> --reason "rejected: <summary>"`.
-     3. Record the verdict as rejected, with the reasons. Commit.
-     4. Tell the human: `/helm:run` fixes them and brings QA back.
+**QA items** (label `qa`).
+1. Go through each acceptance criterion with its evidence. For demo steps, give the exact command; the human runs it, or you run it and show the output. The verdict for each is pass, fail, or pass-with-note.
+2. Show the "decisions made without escalation", and ask whether to revert any.
+3. Show a fresh `node ${CLAUDE_PLUGIN_ROOT}/scripts/authority.mjs protected-diff <main>`. Each file it lists must be explained by an accepted decision; one that isn't counts as a failed criterion.
+4. **All pass:**
+   1. `bd human respond <qa> -r accepted`.
+   2. In the doc, fill the Verdict and set Status to Accepted. Commit.
+   3. `bd epic close-eligible`.
+   4. If the project is on GitHub: `git push -u origin <branch>` and `gh pr create`. Otherwise: `git switch <main> && git merge --no-ff <branch>`.
+   5. `git tag mNN`.
+   6. Set `active_milestone` to null and commit.
+   7. Point to `/helm:milestone`.
+5. **Otherwise:**
+   1. Create one task per failure, with the human's words as its acceptance.
+   2. `bd human dismiss <qa> --reason "rejected: ..."`.
+   3. Record the verdict and commit.
+   4. Point to `/helm:run`.

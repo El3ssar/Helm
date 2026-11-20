@@ -12,7 +12,7 @@ The human owns intent and decisions; you execute approved milestones.
 - `.helm/state.json`: the active milestone.
 
 **Escalate, don't decide**, if a task would:
-- touch `.helm/public-paths`;
+- change any file matched by the globs in `.helm/public-paths`;
 - add a dependency;
 - contradict INTENT or an ADR;
 - meet an unclear or infeasible criterion;

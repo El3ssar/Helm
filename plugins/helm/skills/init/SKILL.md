@@ -17,8 +17,8 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}` (scripts in `scripts/`, templates in `templ
 2. **Intent and baseline.**
    - **Greenfield:**
      1. Interview the human for `docs/INTENT.md`, one section at a time: purpose, outcomes, non-goals, invariants, quality bar, open questions. Reject untestable outcomes or invariants.
-     2. Propose the toolchain as `docs/adr/0001-toolchain.md`, using `docs/adr/TEMPLATE.md` once step 3 has created it.
-     3. Scaffold a minimal project with one passing test.
+     2. Propose the toolchain as `docs/adr/0001-toolchain.md`, using `docs/adr/TEMPLATE.md` once step 3 has created it. Get explicit approval, then set Status to Accepted and fill in Decision.
+     3. Only then, scaffold a minimal project with one passing test.
    - **Brownfield:**
      1. Survey with parallel Explore agents: structure, build/test/lint commands, existing docs, stable surface (API, formats, CLI).
      2. Run the tests and record the baseline.

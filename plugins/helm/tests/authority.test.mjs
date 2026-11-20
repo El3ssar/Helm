@@ -84,6 +84,15 @@ test('hook end to end: record then check, fail closed without record', () => {
   assert.match(hook('check', push), /"deny"/)
   assert.match(readFileSync(join(dir, 'data/sessions/s1.json'), 'utf8'), /"run"/)
 
+  // First /helm:init: the prompt arrives before .helm/state.json exists; the grant must survive.
+  const fresh = mkdtempSync(join(tmpdir(), 'helm-fresh-'))
+  const freshHook = (sub, ev) => execFileSync('node', [script, sub], { input: JSON.stringify({ cwd: fresh, ...ev }), env, encoding: 'utf8' })
+  freshHook('record', { session_id: 's2', prompt: '/helm:init' })
+  mkdirSync(join(fresh, '.helm'))
+  writeFileSync(join(fresh, '.helm/state.json'), '{}')
+  assert.equal(freshHook('check', { session_id: 's2', tool_name: 'Edit', tool_input: { file_path: join(fresh, '.helm/check.sh') } }), '')
+  assert.match(freshHook('check', { session_id: 's2', tool_name: 'Bash', tool_input: { command: 'git push' } }), /"deny"/)
+
   // Outside a helm project the hook is inert.
   const other = mkdtempSync(join(tmpdir(), 'plain-'))
   assert.equal(execFileSync('node', [script, 'check'], { input: JSON.stringify({ cwd: other, ...push }), env, encoding: 'utf8' }), '')

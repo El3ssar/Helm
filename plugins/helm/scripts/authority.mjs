@@ -10,7 +10,7 @@
 //   node authority.mjs record|check            (hook input JSON on stdin)
 //   node authority.mjs protected-diff <base>   (protected files changed since <base>)
 //
-// Only active in helm projects (a .helm/state.json at or above cwd).
+// Enforcement is only active in helm projects (a .helm/state.json at or above cwd).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve, isAbsolute } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -120,7 +120,9 @@ const [cmd, arg] = process.argv.slice(2)
 
 if (cmd === 'record') {
   const ev = readStdin()
-  if (!helmRoot(ev.cwd ?? process.cwd()) || !ev.session_id) process.exit(0)
+  // Record in every project: /helm:init starts before .helm/state.json exists, and its grant
+  // must already be on file when the scaffold creates it. Enforcement (`check`) stays helm-only.
+  if (!ev.session_id) process.exit(0)
   const f = sessionFile(ev.session_id)
   mkdirSync(dirname(f), { recursive: true })
   writeFileSync(f, JSON.stringify({ mode: classifyPrompt(ev.prompt), at: new Date().toISOString() }))

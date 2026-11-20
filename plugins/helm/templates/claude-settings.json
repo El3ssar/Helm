@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "ask": [
+      "Edit(/docs/INTENT.md)",
+      "Edit(/docs/adr/**)",
+      "Edit(/.helm/check.sh)",
+      "Edit(/.helm/docs-sync.sh)",
+      "Edit(/.helm/git-hooks/**)",
+      "Edit(/.helm/public-paths)",
+      "Edit(/probity.config.mjs)",
+      "Edit(/.claude/settings.json)",
+      "Edit(/.github/workflows/**)",
+      "Bash(bd human respond *)",
+      "Bash(bd human dismiss *)",
+      "Bash(bd epic close-eligible)",
+      "Bash(bd epic close-eligible *)",
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(git tag *)",
+      "Bash(gh pr merge *)"
+    ]
+  }
+}

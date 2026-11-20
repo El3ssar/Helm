@@ -1,0 +1,5 @@
+# Stable surface of the project: one glob per line (bash extglob/globstar, repo-relative).
+# Public API modules, file formats, CLI definitions, wire protocols, config schemas.
+# Changing anything matched here
+#   - requires an accepted ADR (agents escalate with a decision bead), and
+#   - fails CI unless docs/ changes in the same PR (.helm/docs-sync.sh).

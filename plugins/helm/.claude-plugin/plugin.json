@@ -1,0 +1,29 @@
+{
+  "name": "helm",
+  "displayName": "Helm",
+  "version": "0.1.0",
+  "description": "Human-on-the-loop, milestone-driven, test-first agent development. You own intent and decisions; agents execute approved milestones under TDD (Probity), git-hook and CI gates.",
+  "author": {
+    "name": "Daniel Estevez-Moya",
+    "url": "https://estevez-moya.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "planning",
+    "tdd",
+    "milestones",
+    "beads",
+    "superpowers",
+    "probity"
+  ],
+  "dependencies": [
+    {
+      "name": "superpowers",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "beads",
+      "marketplace": "beads-marketplace"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "main_branch": "HELM_MAIN_BRANCH",
+  "ci": "HELM_CI",
+  "active_milestone": null
+}

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Conventional Commits header. Code-changing types must name the bead they implement:
+#   feat(parser): accept nested blocks
+#
+#   Bead: proj-a3f8.2
+set -euo pipefail
+msg_file="$1"
+header="$(grep -vE '^\s*#' "$msg_file" | head -n1)"
+
+# Let git's own generated messages through.
+if [[ "$header" =~ ^(Merge|Revert|fixup!|squash!|amend!) ]]; then exit 0; fi
+
+types='feat|fix|refactor|perf|test|build|ci|docs|chore|style'
+if ! [[ "$header" =~ ^($types)(\([a-z0-9._/-]+\))?!?:\ .+ ]]; then
+  echo "commit-msg: header must be '<type>(<scope>)?: <summary>', type in: ${types//|/ }" >&2
+  echo "  got: $header" >&2
+  exit 1
+fi
+
+type="${BASH_REMATCH[1]}"
+case "$type" in
+  feat|fix|refactor|perf|test)
+    if ! grep -qE '^Bead: [A-Za-z0-9_]+-[A-Za-z0-9]+(\.[0-9]+)*$' "$msg_file"; then
+      echo "commit-msg: '$type' commits need a trailer line 'Bead: <id>' naming the task." >&2
+      exit 1
+    fi ;;
+esac

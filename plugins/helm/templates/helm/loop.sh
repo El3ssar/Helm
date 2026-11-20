@@ -4,9 +4,10 @@
 #
 #   .helm/loop.sh [-n MAX_SESSIONS] [-b USD_PER_SESSION] [-m MODEL]
 #
-# Each session runs `/helm:run 1` with --permission-mode dontAsk: only what
-# .helm/loop-settings.json allows can run, and everything gated by an ask rule
-# (decisions, ADRs, gates, push/merge/tag) is denied, never prompted.
+# Each session runs `/helm:run 1` in bypassPermissions mode: it can run whatever the
+# project needs. Human authority is enforced by hooks, which bypass does not skip:
+# helm's authority hook denies decisions, ADR/intent/gate/CI edits and push/merge/tag
+# in a /helm:run session; Probity enforces TDD and check-before-commit.
 # The session reports its outcome in .helm/run-status:
 #   continue  task done, more ready      -> next session
 #   blocked   only human decisions left  -> stop, run /helm:decide
@@ -28,10 +29,7 @@ while getopts "n:b:m:h" o; do
 done
 
 command -v claude >/dev/null || { echo "helm-loop: claude CLI not found" >&2; exit 1; }
-[[ -f .helm/loop-settings.json ]] || { echo "helm-loop: missing .helm/loop-settings.json" >&2; exit 1; }
-if grep -q HELM_TOOLCHAIN_ALLOW .helm/loop-settings.json; then
-  echo "helm-loop: .helm/loop-settings.json still has HELM_TOOLCHAIN_ALLOW (run /helm:init)" >&2; exit 1
-fi
+[[ -f .helm/state.json ]] || { echo "helm-loop: not a helm project (run /helm:init)" >&2; exit 1; }
 
 mkdir -p .helm/logs
 stuck_streak=0
@@ -39,7 +37,7 @@ for ((i = 1; i <= max; i++)); do
   rm -f .helm/run-status
   log=".helm/logs/$(date -u +%Y%m%dT%H%M%SZ)-$i.json"
   printf 'helm-loop: session %d/%d ... ' "$i" "$max"
-  args=(-p "/helm:run 1" --permission-mode dontAsk --settings .helm/loop-settings.json
+  args=(-p "/helm:run 1" --permission-mode bypassPermissions
         --output-format json --max-budget-usd "$budget")
   [[ -n "$model" ]] && args+=(--model "$model")
   if ! claude "${args[@]}" >"$log" 2>&1; then

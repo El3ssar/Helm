@@ -10,7 +10,8 @@ argument-hint: "[short description of the project, for empty repos]"
 Goal: leave the repo with a written intent, a truthful architecture map, one quality
 gate (`.helm/check.sh`) wired into git hooks, Probity and CI, and beads ready for
 milestone planning. The human approves the intent and every decision. You do the
-rest.
+rest. Ask questions in the conversation, not through permission prompts: the session
+may be in bypass mode, so a write going through is never an approval.
 
 Plugin files live at `${CLAUDE_PLUGIN_ROOT}`. Project argument: $ARGUMENTS
 
@@ -30,7 +31,7 @@ Tell the user in one line which mode you detected and why (e.g. "existing codeba
 
 ### Greenfield
 1. Use `superpowers:brainstorming` to interview the user about the project, scoped to the content of `docs/INTENT.md`: purpose, outcomes, non-goals, invariants, quality bar, open questions. Do not design features yet. Ask one question at a time and push back on vague outcomes or invariants that can't be tested.
-2. Write `docs/INTENT.md` from `${CLAUDE_PLUGIN_ROOT}/templates/docs/INTENT.md`. The write triggers a permission prompt, which is how the user approves it.
+2. Write `docs/INTENT.md` from `${CLAUDE_PLUGIN_ROOT}/templates/docs/INTENT.md`. Show it and get an explicit approval with AskUserQuestion before continuing.
 3. Stack decision: propose the language, build tool, test framework (plus a property-testing library where the domain is mathematical) and formatter/linter as `docs/adr/0001-toolchain.md` (Status: Proposed, using the ADR template). Present it. On approval, set `Status: Accepted` and fill in Decision.
 4. Scaffold the smallest buildable project for that stack with **one** real test that passes. No features.
 
@@ -52,7 +53,6 @@ The gates fail closed on an unconfigured project, so they go live last.
    - `.helm/check.sh`: replace every `HELM_UNSET` with the real command for this project. `fmt` checks and never rewrites. `test_fast` must finish in seconds. `docs` is `true` only if the language has no doc tooling. Run `.helm/check.sh fast` to prove the commands work.
    - `probity.config.mjs`: replace `HELM_SOURCE_GLOBS` with an array covering the source **and** test paths (e.g. `['src/**', 'tests/**']`, `['**/*.lean']`).
    - `.github/workflows/helm.yml`: replace `# HELM_TOOLCHAIN_STEPS` with the official setup actions for the toolchain, pinned to the versions in ADR-0001 or the repo's toolchain files.
-   - `.helm/loop-settings.json`: replace `"HELM_TOOLCHAIN_ALLOW"` with one `Bash(...)` rule per toolchain command that agents need to build and test in this project. Examples: `"Bash(cargo *)"`; `"Bash(lake *)"`; `"Bash(uv run *)"`, `"Bash(python3 -m pytest *)"`. Keep it to build, test and format tools. Headless sessions can run nothing else, and that is the point.
    - `.helm/public-paths`: brownfield, the stable surface you found in step 2. Greenfield, leave it empty until the first public API exists. Show the user the list.
 4. `npm install -D @nizos/probity`. If there is no `package.json`, create `{"private": true}` first. Record in ADR-0001 that this is the cost of language-agnostic TDD enforcement.
 5. `.helm/check.sh full` must pass. Fix the configuration, not the gate.
@@ -64,7 +64,7 @@ The gates fail closed on an unconfigured project, so they go live last.
 2. Reply with a short summary:
    - mode and stack;
    - what the gate checks;
-   - the human gates: edits to INTENT, ADRs, the gates and CI, plus push, merge, tag and answering decisions, all prompt the user;
+   - human authority: INTENT, ADRs, the gates, CI and settings can be changed, and decisions answered, merges, pushes and tags done, only in a turn the human started with `/helm:decide` (or `/helm:init`, or a message containing `helm:override`). Helm's authority hook enforces this in every permission mode, bypass included;
    - brownfield only: the baseline beads.
    - Next step: `/helm:milestone` to plan the first milestone, then `/helm:run` in a session or `.helm/loop.sh` in a terminal.
 

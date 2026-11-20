@@ -33,7 +33,7 @@ uninstall it if you added it: `/plugin uninstall probity@probity`.
 ```
 
 Unattended execution, from a terminal: `.helm/loop.sh [-n sessions] [-b usd-per-session] [-m model]`.
-It runs `/helm:run 1` in a fresh headless session per task (`--permission-mode dontAsk`).
+It runs `/helm:run 1` in a fresh headless session per task, in bypass mode.
 It stops when the milestone needs you (decision or QA), when a task is stuck twice, or at the session limit.
 
 ## What ends up in your repo
@@ -46,17 +46,20 @@ It stops when the milestone needs you (decision or QA), when a task is stuck twi
 | `docs/milestones/MNN-*.md` | both | brief, acceptance criteria, QA report, verdict |
 | `.beads/` | agent | tasks, dependencies, decisions (`human` label) |
 | `.helm/check.sh` | you | the one quality gate: `fast` (pre-commit) / `full` (CI, pre-QA) |
-| `.helm/loop.sh`, `.helm/loop-settings.json` | you | headless loop and its allow-list (toolchain commands only) |
+| `.helm/loop.sh` | you | headless loop: one fresh bypass-mode session per task |
 | `.helm/public-paths` | you | stable surface; changes need an ADR and doc updates |
 | `probity.config.mjs` | you | TDD on source+tests, check-before-commit, no hook bypass |
 
 ## Gates
 
-| Layer | Enforces | Bypassable by the agent? |
-|---|---|---|
-| Permission `ask` rules | edits to INTENT, ADRs, gates, CI; `push`, `merge`, `tag`; answering decisions; closing epics | no, you are prompted every time (even in auto mode) |
-| Probity hook | failing test before code; `.helm/check.sh` before `git commit`; no `--no-verify`, force-push, `reset --hard` | no |
-| Git hooks | `check.sh fast` on commit; Conventional Commits with a `Bead: <id>` trailer on code changes | no (`--no-verify` is blocked) |
-| CI | `check.sh full`, plus a docs-sync check on the stable surface | no |
+Helm is built for bypass mode. Every gate is a hook or a git/CI check, so none of them depends on permission prompts.
 
-Don't run sessions with `--dangerously-skip-permissions`: it disables the `ask` layer, and with it your control over decisions.
+| Layer | Enforces |
+|---|---|
+| **Authority hook** (helm plugin) | INTENT, ADRs, gates, CI and settings edits; answering decisions; closing milestones; push, merge, tag and PRs. Allowed only in a turn **you** started with `/helm:decide`, `/helm:init` (edits only), or a message containing `helm:override`. Denied in `/helm:run` and in the loop. Fails closed. |
+| **Probity hook** (per project) | failing test before code; `.helm/check.sh` before `git commit`; no `--no-verify`, force-push or `reset --hard` |
+| **Git hooks** | `check.sh fast` on every commit; Conventional Commits with a `Bead: <id>` trailer on code changes |
+| **CI** | `check.sh full`, plus docs-sync on the stable surface |
+| **QA backstop** | every QA report lists the protected files the branch changed; an unexplained one fails QA |
+
+What hooks can't do: in-process guards stop an agent that is overreaching, not one that is deliberately evading them. Shell writes to protected files are detected heuristically. That's why the QA backstop exists: whatever got through shows up in front of you before merge.

@@ -41,7 +41,6 @@ function placeholders() {
   const todo = []
   if (/HELM_UNSET;/.test(read('.helm/check.sh'))) todo.push('.helm/check.sh: replace every HELM_UNSET')
   if (read('probity.config.mjs').includes('HELM_SOURCE_GLOBS')) todo.push('probity.config.mjs: HELM_SOURCE_GLOBS')
-  if (read('.helm/loop-settings.json').includes('HELM_TOOLCHAIN_ALLOW')) todo.push('.helm/loop-settings.json: HELM_TOOLCHAIN_ALLOW')
   if (read('.github/workflows/helm.yml').includes('HELM_TOOLCHAIN_STEPS')) todo.push('.github/workflows/helm.yml: HELM_TOOLCHAIN_STEPS')
   return todo
 }
@@ -110,7 +109,6 @@ place('helm/docs-sync.sh', '.helm/docs-sync.sh', undefined, 0o755)
 place('helm/git-hooks/pre-commit', '.helm/git-hooks/pre-commit', undefined, 0o755)
 place('helm/git-hooks/commit-msg', '.helm/git-hooks/commit-msg', undefined, 0o755)
 place('helm/loop.sh', '.helm/loop.sh', undefined, 0o755)
-place('helm/loop-settings.json', '.helm/loop-settings.json')
 place('helm/public-paths', '.helm/public-paths')
 place('helm/state.json', '.helm/state.json', (s) => s.replace('HELM_MAIN_BRANCH', main).replace('HELM_CI', ci))
 place('probity.config.mjs', 'probity.config.mjs')
@@ -124,15 +122,25 @@ place('docs/ARCHITECTURE.md', 'docs/ARCHITECTURE.md')
 place('docs/adr/TEMPLATE.md', 'docs/adr/TEMPLATE.md')
 place('docs/milestones/TEMPLATE.md', 'docs/milestones/TEMPLATE.md')
 
-// Permission gates: union of ask rules, everything else preserved.
+// Helm <= 0.2 used permission ask rules as the human gate; 0.3 uses the authority hook,
+// which also holds in bypass mode. Remove the old rules so they don't double-prompt.
 {
+  const legacy = new Set([
+    'Edit(/docs/INTENT.md)', 'Edit(/docs/adr/**)', 'Edit(/.helm/check.sh)', 'Edit(/.helm/docs-sync.sh)',
+    'Edit(/.helm/git-hooks/**)', 'Edit(/.helm/public-paths)', 'Edit(/.helm/loop.sh)', 'Edit(/.helm/loop-settings.json)',
+    'Edit(/probity.config.mjs)', 'Edit(/.claude/settings.json)', 'Edit(/.github/workflows/**)',
+    'Bash(bd human respond *)', 'Bash(bd human dismiss *)', 'Bash(bd epic close-eligible)', 'Bash(bd epic close-eligible *)',
+    'Bash(git push *)', 'Bash(git merge *)', 'Bash(git tag *)', 'Bash(gh pr merge *)',
+  ])
   const cur = readSettings()
-  const add = JSON.parse(readFileSync(join(T, 'claude-settings.json'), 'utf8')).permissions.ask
-  cur.permissions ??= {}
-  const before = new Set(cur.permissions.ask ?? [])
-  cur.permissions.ask = [...before, ...add.filter((r) => !before.has(r))]
-  writeSettings(cur)
-  log(before.size ? 'merged' : 'created', '.claude/settings.json (ask rules)')
+  const ask = cur.permissions?.ask
+  if (ask?.some((r) => legacy.has(r))) {
+    cur.permissions.ask = ask.filter((r) => !legacy.has(r))
+    if (!cur.permissions.ask.length) delete cur.permissions.ask
+    if (!Object.keys(cur.permissions).length) delete cur.permissions
+    writeSettings(cur)
+    log('migrated', '.claude/settings.json (removed helm <=0.2 ask rules)')
+  }
 }
 
 // CLAUDE.md contract block: replace between markers, or append.

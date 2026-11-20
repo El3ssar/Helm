@@ -9,7 +9,7 @@ Set up helm. Ask questions the way the "Asking the human" rule in `${CLAUDE_PLUG
 Plugin root: `${CLAUDE_PLUGIN_ROOT}` (scripts in `scripts/`, templates in `templates/`). Project description: $ARGUMENTS
 
 1. **Detect.** Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect.sh`.
-   - `mode=initialized`: run `node ${CLAUDE_PLUGIN_ROOT}/scripts/scaffold.mjs --phase gates`, then stop.
+   - `mode=initialized`: run `scaffold.mjs --phase files --main <main_branch from state> --ci <ci from state>`, then `--phase gates`. This refreshes the CLAUDE.md block and rewires the hooks. Then stop.
    - `tool_bd=0` or `tool_node=0`: say what to install, then stop.
    - `has_git=0`: `git init -b main`.
    - Confirm the mode (citing the evidence), and ask CI: GitHub Actions or none.

@@ -34,4 +34,5 @@ Everything else you decide yourself, and record it in the task's close reason.
 - Out-of-scope work you notice: `bd create "<title>" -l triage --deps discovered-from:<id>`; do not do it now.
 - Close with `bd close <id> -r "<what changed; how verified; local decisions taken>"`.
 - Never push, merge, tag, close milestone epics, or answer human decisions. Those prompt the human by design.
+- This block is the repository authority for the beads session protocol. You are authorised to commit; you are not authorised to push, pull or sync remotes.
 <!-- helm:end -->

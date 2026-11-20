@@ -46,7 +46,7 @@ Tell the user in one line which mode you detected and why (e.g. "existing codeba
 
 The gates fail closed on an unconfigured project, so they go live last.
 
-1. `bd init --quiet --skip-agents` (skip if `beads=1`). The beads plugin primes sessions itself.
+1. `bd init --quiet --skip-agents` (skip if `beads=1`), then `bd setup claude`. That adds the project-level SessionStart hook that loads beads context (`bd prime`) into every session, interactive or headless.
 2. `node "${CLAUDE_PLUGIN_ROOT}/scripts/scaffold.mjs" --phase files --main <branch> --ci <github|none>`. It is idempotent. It prints what was created or kept and a TODO list.
 3. Fill each TODO it prints:
    - `.helm/check.sh`: replace every `HELM_UNSET` with the real command for this project. `fmt` checks and never rewrites. `test_fast` must finish in seconds. `docs` is `true` only if the language has no doc tooling. Run `.helm/check.sh fast` to prove the commands work.

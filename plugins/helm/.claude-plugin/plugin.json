@@ -1,8 +1,8 @@
 {
   "name": "helm",
   "displayName": "Helm",
-  "version": "0.2.0",
-  "description": "Human-on-the-loop, milestone-driven, test-first agent development. You own intent and decisions; agents execute approved milestones under TDD (Probity), git-hook and CI gates.",
+  "version": "0.3.0",
+  "description": "Human-on-the-loop, milestone-driven, test-first agent development, built for bypass mode. You own intent and decisions (enforced by hooks); agents execute approved milestones under TDD, git-hook and CI gates.",
   "author": {
     "name": "Daniel Estevez-Moya",
     "url": "https://estevez-moya.com"

@@ -12,8 +12,10 @@ can answer it in under a minute. They may answer differently from your recommend
 record their answer faithfully, and if you think it's unsound, say so once, with the
 reason, before recording it.
 
-Only this command may run `bd human respond`, `bd human dismiss`, `bd epic close-eligible`,
-`git merge`, `git tag` and `git push`. Each of them prompts the human, by design.
+This is the only command in which helm's authority hook allows answering decisions, closing
+milestones, editing ADRs/INTENT/gates/CI, and pushing, merging or tagging. The session may be in
+bypass mode, so **never act before the human has answered in the conversation**. Writes going
+through prove nothing; the human's answer is the approval.
 
 Target: $ARGUMENTS (default: all open items, oldest first, QA last).
 
@@ -32,7 +34,7 @@ For each item from `bd human list -s open`:
    - ADR (when the bead has a draft): write `docs/adr/NNNN-<slug>.md` from it, using the next free number. Set `Status: Accepted` (or `Rejected`, which is kept as a record) and fill **Decision** with the human's answer. Add a line to the Decisions index in ARCHITECTURE.md.
    - If the answer changes the stable surface, update `.helm/public-paths`.
    - If the answer changes scope: adjust the epic's tasks (create, close as `superseded: <decision id>`, or re-link deps) and tell the human what changed.
-   - If it resolves an INTENT open question: propose the INTENT edit. The write prompts the human.
+   - If it resolves an INTENT open question: show the proposed INTENT edit and apply it only after the human confirms it.
 4. Commit the doc changes: `docs(adr): <decision>`.
 
 ## Milestone QA (`qa` label)
@@ -41,6 +43,7 @@ For each item from `bd human list -s open`:
    - for demo steps, give the exact command. The human runs it, or asks you to run it and show the output;
    - ask: pass / fail / pass-with-note.
 2. Show "Decisions made without escalation" and ask whether any should be reverted.
+   Show **Protected files changed**, freshly computed with `node "${CLAUDE_PLUGIN_ROOT}/scripts/authority.mjs" protected-diff <main>`. Any file listed there must be explained by an accepted decision; if one isn't, treat it as a failed criterion.
 3. Then:
    - **All pass, none reverted:**
      1. `bd human respond <qa-id> -r "accepted"`.

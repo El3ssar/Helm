@@ -9,8 +9,9 @@ argument-hint: "[max tasks this session]"
 
 Execute the active milestone autonomously, inside the boundaries the human approved.
 Never wait for input. Anything that needs the human becomes a decision bead, and you
-move on. The session may be headless (`.helm/loop.sh`), in which case every
-human-gated action is denied, not prompted. Don't attempt one.
+move on. The session is often headless and in bypass mode (`.helm/loop.sh`).
+Helm's authority hook denies every human-owned action in a `/helm:run` turn:
+decisions, ADR/INTENT/gate/CI edits, push/merge/tag. Don't attempt one.
 
 Task limit for this session: $ARGUMENTS (empty = no limit).
 
@@ -39,7 +40,7 @@ Repeat until the task limit is reached or no ready task remains:
 4. **Execute**: use `superpowers:subagent-driven-development` to carry out the plan, with `superpowers:test-driven-development` for every step.
    - On a failure you don't understand: `superpowers:systematic-debugging`.
    - Probity rejections are instructions. Follow them; don't work around them.
-   - Permission denials mean you are outside your remit. Escalate; never retry another way.
+   - A `helm:` denial means you are outside your remit. Escalate with a decision bead; never retry another way.
 5. **Docs**: if the change alters anything `docs/ARCHITECTURE.md` describes, update it in the same commit.
 6. **Verify and commit**: `superpowers:verification-before-completion`, then `.helm/check.sh fast`, then commit:
    ```
@@ -73,6 +74,7 @@ Pick the first case that applies:
    - **Criteria:** one row per acceptance criterion: met or not met, with evidence.
    - **Decisions made without escalation:** collected from the close reasons.
    - **Deviations from plan**, **New work discovered** (triage bead ids), **Known limitations**.
+   - **Protected files changed**: paste the output of `node "${CLAUDE_PLUGIN_ROOT}/scripts/authority.mjs" protected-diff <main>`, or write "none". This is the backstop for anything that got past the hook.
 5. Set `Status: QA`. Then `.helm/check.sh fast` and `git commit -m "docs(milestone): QA report MNN"`.
 6. `bd create "QA: accept MNN" -t decision -l human,qa --parent EPIC -d "See <doc>, section QA report"`.
 7. Write `qa`. Final message: a 5-line summary (built, criteria met X/Y, deviations), then `/helm:decide` to run QA.

@@ -50,7 +50,7 @@ bd dep add <task> <prerequisite>          # task ordering
 bd dep add <task> <decision>              # tasks that need the answer
 ```
 Add a final task "Update ARCHITECTURE.md and docs for MNN" that depends on every other task.
-Write a Proposed ADR for each architectural decision bead (`docs/adr/NNNN-<slug>.md`).
+For each architectural decision bead, put the full ADR draft (`docs/adr/TEMPLATE.md` format) in its `--design` field. `/helm:decide` writes the file once the human answers.
 
 ## 4. Review the graph with the human
 Show:

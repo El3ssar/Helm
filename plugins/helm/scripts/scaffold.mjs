@@ -41,6 +41,7 @@ function placeholders() {
   const todo = []
   if (/HELM_UNSET;/.test(read('.helm/check.sh'))) todo.push('.helm/check.sh: replace every HELM_UNSET')
   if (read('probity.config.mjs').includes('HELM_SOURCE_GLOBS')) todo.push('probity.config.mjs: HELM_SOURCE_GLOBS')
+  if (read('.helm/loop-settings.json').includes('HELM_TOOLCHAIN_ALLOW')) todo.push('.helm/loop-settings.json: HELM_TOOLCHAIN_ALLOW')
   if (read('.github/workflows/helm.yml').includes('HELM_TOOLCHAIN_STEPS')) todo.push('.github/workflows/helm.yml: HELM_TOOLCHAIN_STEPS')
   return todo
 }
@@ -108,6 +109,8 @@ place('helm/check.sh', '.helm/check.sh', undefined, 0o755)
 place('helm/docs-sync.sh', '.helm/docs-sync.sh', undefined, 0o755)
 place('helm/git-hooks/pre-commit', '.helm/git-hooks/pre-commit', undefined, 0o755)
 place('helm/git-hooks/commit-msg', '.helm/git-hooks/commit-msg', undefined, 0o755)
+place('helm/loop.sh', '.helm/loop.sh', undefined, 0o755)
+place('helm/loop-settings.json', '.helm/loop-settings.json')
 place('helm/public-paths', '.helm/public-paths')
 place('helm/state.json', '.helm/state.json', (s) => s.replace('HELM_MAIN_BRANCH', main).replace('HELM_CI', ci))
 place('probity.config.mjs', 'probity.config.mjs')
@@ -147,7 +150,7 @@ place('docs/milestones/TEMPLATE.md', 'docs/milestones/TEMPLATE.md')
 {
   const p = '.gitignore'
   const cur = existsSync(at(p)) ? readFileSync(at(p), 'utf8') : ''
-  const need = ['node_modules/'].filter((l) => !cur.split('\n').includes(l))
+  const need = ['node_modules/', '.helm/run-status', '.helm/logs/'].filter((l) => !cur.split('\n').includes(l))
   if (need.length) {
     writeFileSync(at(p), (cur && !cur.endsWith('\n') ? cur + '\n' : cur) + need.join('\n') + '\n')
     log('updated', p)

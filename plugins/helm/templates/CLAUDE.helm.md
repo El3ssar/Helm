@@ -5,7 +5,7 @@ The human owns intent and high-level decisions. You own execution inside an appr
 
 ### Sources of truth
 - `docs/INTENT.md`: purpose, non-goals, invariants. Human-owned; never edit unless told to.
-- `docs/adr/`: decisions. You may draft one with `Status: Proposed`; only the human accepts.
+- `docs/adr/`: accepted decisions. Written only through `/helm:decide`. You draft ADRs inside the decision bead's `--design` field.
 - `docs/ARCHITECTURE.md`: how the system is built now. Keep it true in the same commit as the change.
 - `docs/milestones/`: one brief + QA report per milestone.
 - beads (`bd`): every unit of work. No TODO lists in markdown or code comments.
@@ -23,7 +23,7 @@ Create a decision bead and stop working on what it blocks when a task would:
 bd create "Decide: <question>" -t decision -l human --parent <epic> -d "<body>"
 bd dep add <blocked-task> <decision-id>
 ```
-Body: Question / Context / Options (with consequences) / Recommendation / Blocks / ADR (if architectural: draft `docs/adr/NNNN-*.md`, Status: Proposed).
+Body: Question / Context / Options (with consequences) / Recommendation / Blocks. If the decision is architectural, put the full ADR draft (template: `docs/adr/TEMPLATE.md`) in `--design`.
 Everything else you decide yourself, and record it in the task's close reason.
 
 ### Execution rules

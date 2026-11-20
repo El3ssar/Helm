@@ -52,6 +52,7 @@ The gates fail closed on an unconfigured project, so they go live last.
    - `.helm/check.sh`: replace every `HELM_UNSET` with the real command for this project. `fmt` checks and never rewrites. `test_fast` must finish in seconds. `docs` is `true` only if the language has no doc tooling. Run `.helm/check.sh fast` to prove the commands work.
    - `probity.config.mjs`: replace `HELM_SOURCE_GLOBS` with an array covering the source **and** test paths (e.g. `['src/**', 'tests/**']`, `['**/*.lean']`).
    - `.github/workflows/helm.yml`: replace `# HELM_TOOLCHAIN_STEPS` with the official setup actions for the toolchain, pinned to the versions in ADR-0001 or the repo's toolchain files.
+   - `.helm/loop-settings.json`: replace `"HELM_TOOLCHAIN_ALLOW"` with one `Bash(...)` rule per toolchain command that agents need to build and test in this project. Examples: `"Bash(cargo *)"`; `"Bash(lake *)"`; `"Bash(uv run *)"`, `"Bash(python3 -m pytest *)"`. Keep it to build, test and format tools. Headless sessions can run nothing else, and that is the point.
    - `.helm/public-paths`: brownfield, the stable surface you found in step 2. Greenfield, leave it empty until the first public API exists. Show the user the list.
 4. `npm install -D @nizos/probity`. If there is no `package.json`, create `{"private": true}` first. Record in ADR-0001 that this is the cost of language-agnostic TDD enforcement.
 5. `.helm/check.sh full` must pass. Fix the configuration, not the gate.
@@ -65,6 +66,6 @@ The gates fail closed on an unconfigured project, so they go live last.
    - what the gate checks;
    - the human gates: edits to INTENT, ADRs, the gates and CI, plus push, merge, tag and answering decisions, all prompt the user;
    - brownfield only: the baseline beads.
-   - Next step: `/helm:milestone` to plan the first milestone.
+   - Next step: `/helm:milestone` to plan the first milestone, then `/helm:run` in a session or `.helm/loop.sh` in a terminal.
 
 Do not start any feature work in this command.

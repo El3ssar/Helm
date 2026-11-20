@@ -19,7 +19,7 @@ Target: $ARGUMENTS (default: all open items, oldest first, QA last).
 
 ## Ordinary decisions (`-t decision`, without the `qa` label)
 For each item from `bd human list -s open`:
-1. `bd show <id>`. Also open the linked ADR, if one exists.
+1. `bd show <id>`. Its design field holds the ADR draft, if one exists.
 2. Present the decision in four parts:
    - the question;
    - why it matters, in two lines;
@@ -29,7 +29,7 @@ For each item from `bd human list -s open`:
    Then ask with AskUserQuestion. Put your recommendation first, marked Recommended. The human can always type their own answer.
 3. Record the answer:
    - `bd human respond <id> -r "<answer, in the human's words where given>"`.
-   - ADR: set `Status: Accepted` (or `Rejected`), fill **Decision**, and add a line to the Decisions index in ARCHITECTURE.md.
+   - ADR (when the bead has a draft): write `docs/adr/NNNN-<slug>.md` from it, using the next free number. Set `Status: Accepted` (or `Rejected`, which is kept as a record) and fill **Decision** with the human's answer. Add a line to the Decisions index in ARCHITECTURE.md.
    - If the answer changes the stable surface, update `.helm/public-paths`.
    - If the answer changes scope: adjust the epic's tasks (create, close as `superseded: <decision id>`, or re-link deps) and tell the human what changed.
    - If it resolves an INTENT open question: propose the INTENT edit. The write prompts the human.

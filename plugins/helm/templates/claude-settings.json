@@ -7,6 +7,8 @@
       "Edit(/.helm/docs-sync.sh)",
       "Edit(/.helm/git-hooks/**)",
       "Edit(/.helm/public-paths)",
+      "Edit(/.helm/loop.sh)",
+      "Edit(/.helm/loop-settings.json)",
       "Edit(/probity.config.mjs)",
       "Edit(/.claude/settings.json)",
       "Edit(/.github/workflows/**)",

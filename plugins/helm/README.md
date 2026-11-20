@@ -31,6 +31,10 @@ uninstall it if you added it: `/plugin uninstall probity@probity`.
 /helm:status      one-screen picture: intent, progress graph, waiting-on-you, health
 ```
 
+Unattended execution, from a terminal: `.helm/loop.sh [-n sessions] [-b usd-per-session] [-m model]`.
+It runs `/helm:run 1` in a fresh headless session per task (`--permission-mode dontAsk`).
+It stops when the milestone needs you (decision or QA), when a task is stuck twice, or at the session limit.
+
 ## What ends up in your repo
 
 | Path | Owner | Purpose |
@@ -41,6 +45,7 @@ uninstall it if you added it: `/plugin uninstall probity@probity`.
 | `docs/milestones/MNN-*.md` | both | brief, acceptance criteria, QA report, verdict |
 | `.beads/` | agent | tasks, dependencies, decisions (`human` label) |
 | `.helm/check.sh` | you | the one quality gate: `fast` (pre-commit) / `full` (CI, pre-QA) |
+| `.helm/loop.sh`, `.helm/loop-settings.json` | you | headless loop and its allow-list (toolchain commands only) |
 | `.helm/public-paths` | you | stable surface; changes need an ADR and doc updates |
 | `probity.config.mjs` | you | TDD on source+tests, check-before-commit, no hook bypass |
 

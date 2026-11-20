@@ -1,0 +1,33 @@
+name: validate
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: shellcheck
+        run: |
+          shellcheck plugins/helm/scripts/*.sh \
+            plugins/helm/templates/helm/*.sh \
+            plugins/helm/templates/helm/git-hooks/*
+      - name: node syntax
+        run: node --check plugins/helm/scripts/scaffold.mjs
+      - name: JSON templates parse
+        run: |
+          for f in plugins/helm/templates/claude-settings.json \
+                   plugins/helm/templates/helm/loop-settings.json \
+                   plugins/helm/templates/helm/state.json; do
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || exit 1
+          done
+      - name: plugin and marketplace manifests
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin validate ./plugins/helm
+          claude plugin validate .

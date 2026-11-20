@@ -14,7 +14,8 @@ Built on [Superpowers](https://github.com/obra/superpowers) (how a task is done)
 /plugin marketplace add <this repo>
 /plugin install helm@helm
 ```
-Superpowers and beads install as dependencies. Also needed on the machine: the `bd` CLI, Node ≥ 20, and git.
+Superpowers installs as a dependency. Also needed on the machine: the [`bd` CLI](https://github.com/gastownhall/beads#-quick-start), Node ≥ 20, and git.
+The beads Claude Code plugin is not needed: `/helm:init` runs `bd setup claude`, which wires beads into each project.
 
 Probity is **not** used as a Claude Code plugin. `/helm:init` installs it per project
 (`npm i -D @nizos/probity`) and registers its hook in the project's `.claude/settings.json`.

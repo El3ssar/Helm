@@ -6,8 +6,7 @@
   },
   "description": "Human-on-the-loop, milestone-driven, test-first agent development for any language.",
   "allowCrossMarketplaceDependenciesOn": [
-    "claude-plugins-official",
-    "beads-marketplace"
+    "claude-plugins-official"
   ],
   "plugins": [
     {

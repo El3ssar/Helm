@@ -1,80 +1,41 @@
 ---
 name: run
-description: Execute the active milestone task by task, test-first, until it is done, blocked on a human decision, or the task limit is reached; at the end of the milestone, verify it and write the QA report. Works interactively and headless (.helm/loop.sh runs it one task per session).
+description: Execute the active milestone test-first until done, blocked, or task limit; then prepare QA.
 disable-model-invocation: true
-argument-hint: "[max tasks this session]"
+argument-hint: "[max tasks]"
 ---
+Execute the active milestone. Never wait for input; anything that needs the human becomes a decision bead. This is often a headless bypass session. Human-owned actions are denied here, so don't attempt them.
 
-# /helm:run
+Task limit: $ARGUMENTS (empty = none). **Before ending, always write the first line of `.helm/run-status`** with one of: `continue | blocked | qa | stuck | idle`.
 
-Execute the active milestone autonomously, inside the boundaries the human approved.
-Never wait for input. Anything that needs the human becomes a decision bead, and you
-move on. The session is often headless and in bypass mode (`.helm/loop.sh`).
-Helm's authority hook denies every human-owned action in a `/helm:run` turn:
-decisions, ADR/INTENT/gate/CI edits, push/merge/tag. Don't attempt one.
+**0. Orient.**
+1. If `.helm/state.json` has no `active_milestone`, write `idle` and stop.
+2. Read the milestone doc and ARCHITECTURE, then `git switch <branch>`.
+3. Run `bd list --parent EPIC --status in_progress --json` and resume any task it lists first.
+4. If the tree is dirty and nothing is in progress: `git stash push -u -m "helm-orphan"` and file a triage bead.
 
-Task limit for this session: $ARGUMENTS (empty = no limit).
+**1. Loop** until the task limit is reached or nothing is ready:
+1. `bd ready --parent EPIC --exclude-label human --json -n 1`, then `bd update <id> --claim`, then `bd show <id>`.
+2. If an escalation trigger applies: create the decision bead, block the task on it, `bd update <id> --status open`, and go to the next task.
+3. Plan with `superpowers:writing-plans`, then `bd update <id> --spec-id <plan>`.
+4. Execute with `superpowers:subagent-driven-development` and `superpowers:test-driven-development`. Use `superpowers:systematic-debugging` when stuck.
+5. Update ARCHITECTURE in the same commit if the structure changed.
+6. Run `superpowers:verification-before-completion`, then `.helm/check.sh fast`, then commit with the `Bead:` trailer.
+7. `bd close <id> -r "<change; tests; local decisions>"`.
 
-Before you end the session, **always** write the outcome as the first line of
-`.helm/run-status`, using one of these words:
-`continue | blocked | qa | stuck | idle`. The loop script depends on it.
+**Stuck rule:** after 3 failed attempts, record what you tried with `bd update <id> --append-notes`, create "Decide: how to unblock <task>", and block the task on it. Then write `stuck` and end if you're running a single task; otherwise continue.
 
-## 0. Orient
-1. Read `.helm/state.json`. If `active_milestone` is null: write `idle` and stop.
-2. Read the milestone doc, `docs/ARCHITECTURE.md` and the CLAUDE.md helm block. They are your constraints.
-3. `git switch <branch>`.
-4. **Recover from a crashed session:**
-   - `bd list --parent EPIC --status in_progress --json`. Any task listed there was left by a session that died. Resume it first (go to step 3 of the loop), and keep whatever uncommitted work belongs to it.
-   - If the tree is dirty and no task is in progress: `git stash push -u -m "helm-orphan <date>"`, record the stash in a triage bead, and continue.
+**2. End.** Use the first case that applies:
+- an open `qa` bead exists: write `qa`;
+- the limit was hit and work is still ready: write `continue`;
+- only human blockers remain: write `blocked`, list each decision (question, options, recommendation, what it blocks), and point to `/helm:decide`;
+- all tasks are closed: go to step 3.
 
-## 1. Task loop
-Repeat until the task limit is reached or no ready task remains:
-
-1. **Pick**: `bd ready --parent EPIC --exclude-label human --json -n 1`, then `bd update <id> --claim`. Read it with `bd show <id>`.
-2. **Escalation check**: check the task against the "Escalate, don't decide" list in CLAUDE.md before writing anything.
-   - If any item applies, create the decision bead:
-     - `-d` holds Question / Context / Options with consequences / Recommendation / Blocks;
-     - `--design` holds the full ADR draft when the decision is architectural. `/helm:decide` turns it into the ADR file. Never write to `docs/adr/` yourself.
-   - Then `bd dep add <id> <decision>` and `bd update <id> --status open`, and go back to step 1.
-3. **Plan**: use `superpowers:writing-plans` for this task only, from its acceptance and design fields. Link the plan with `bd update <id> --spec-id <plan path>`.
-4. **Execute**: use `superpowers:subagent-driven-development` to carry out the plan, with `superpowers:test-driven-development` for every step.
-   - On a failure you don't understand: `superpowers:systematic-debugging`.
-   - Probity rejections are instructions. Follow them; don't work around them.
-   - A `helm:` denial means you are outside your remit. Escalate with a decision bead; never retry another way.
-5. **Docs**: if the change alters anything `docs/ARCHITECTURE.md` describes, update it in the same commit.
-6. **Verify and commit**: `superpowers:verification-before-completion`, then `.helm/check.sh fast`, then commit:
-   ```
-   <type>(<scope>): <summary>
-
-   Bead: <id>
-   ```
-7. **Close**: `bd close <id> -r "<what changed>; verified by <tests>; decided: <any local choices>"`.
-8. **Discovered work**: anything out of scope becomes `bd create "<title>" -l triage --deps discovered-from:<id>`. Don't do it.
-
-**Stuck rule:** after 3 failed attempts on the same task, stop working on it.
-- Record what you tried with `bd update <id> --append-notes "..."`.
-- Create a decision bead "Decide: how to unblock <task>", with the options you see.
-- Block the task on it.
-- If you are in headless single-task mode, write `stuck` and end. Otherwise continue with other work.
-
-## 2. When the loop ends
-Pick the first case that applies:
-
-0. **An open `qa` bead exists under EPIC**: write `qa` and stop. QA is already waiting on the human.
-1. **Task limit reached and ready tasks remain**: write `continue`. Report progress with `bd epic status`.
-2. **Open tasks remain, but all are blocked by human decisions**: write `blocked`. Report each pending decision as question / options / recommendation / what it blocks, then: run `/helm:decide`.
-3. **Every task under EPIC is closed** (except an open `qa` bead): go to section 3.
-
-## 3. Milestone verification (QA preparation)
-1. `.helm/check.sh full`. It must pass. If it doesn't, create a task for each problem and write `continue`.
-2. Use `superpowers:requesting-code-review` on `git diff <main>...HEAD`, with the milestone doc's acceptance criteria as the review brief.
-   - Each real finding becomes a task under EPIC; then write `continue` and end.
-3. Run the demo script yourself and capture the output.
-4. Fill the milestone doc's **QA report**:
-   - **Criteria:** one row per acceptance criterion: met or not met, with evidence.
-   - **Decisions made without escalation:** collected from the close reasons.
-   - **Deviations from plan**, **New work discovered** (triage bead ids), **Known limitations**.
-   - **Protected files changed**: paste the output of `node "${CLAUDE_PLUGIN_ROOT}/scripts/authority.mjs" protected-diff <main>`, or write "none". This is the backstop for anything that got past the hook.
-5. Set `Status: QA`. Then `.helm/check.sh fast` and `git commit -m "docs(milestone): QA report MNN"`.
-6. `bd create "QA: accept MNN" -t decision -l human,qa --parent EPIC -d "See <doc>, section QA report"`.
-7. Write `qa`. Final message: a 5-line summary (built, criteria met X/Y, deviations), then `/helm:decide` to run QA.
+**3. QA prep.**
+1. `.helm/check.sh full`. On failure: create tasks and write `continue`.
+2. `superpowers:requesting-code-review` on `git diff <main>...HEAD`, against the acceptance criteria. Findings become tasks; write `continue`.
+3. Run the demo script and capture the output.
+4. Fill the doc's QA report: each criterion as met or not met, with evidence; decisions made without escalation (from the close reasons); deviations; triage beads; limitations; and **Protected files changed**, which is the output of `node ${CLAUDE_PLUGIN_ROOT}/scripts/authority.mjs protected-diff <main>`.
+5. Set Status to QA and commit `docs(milestone): QA report MNN`.
+6. `bd create "QA: accept MNN" -t decision -l human,qa --parent EPIC`.
+7. Write `qa`, and give a 5-line summary pointing to `/helm:decide`.
